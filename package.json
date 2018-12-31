@@ -1,0 +1,11 @@
+{
+  "name": "stellar-chat-client",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:refi93/stellar-chat-client.git",
+  "author": "refi93 <rafael.korbas@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "stellar-sdk": "^0.11.0"
+  }
+}
