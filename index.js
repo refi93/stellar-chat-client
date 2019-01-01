@@ -61,7 +61,7 @@ function chat_command(cmd, arg) {
 }
 
 socket.on('message', function (data) {
-	var leader
+	let leader
 	if (data.type == 'chat' && data.nick != nick) {
 		leader = color("<"+data.nick+"> ", "green")
 		console_out(leader + data.message)
