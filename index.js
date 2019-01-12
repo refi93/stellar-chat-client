@@ -1,10 +1,17 @@
-var readline = require('readline')
-util = require('util')
-color = require("ansi-color").set
-stellarChat = require('./stellar')
+require('dotenv').config()
+const readline = require('readline')
+const util = require('util')
+const color = require("ansi-color").set
+const _ = require('lodash')
+const StellarChatDriver = require('./stellar-chat-driver')
 
+
+const chatDriver = StellarChatDriver(
+  process.env.NETWORK_PASSPHRASE,
+  process.env.HORIZON_URL,
+  process.env.CLIENT_SECRET,
+)
 const rl = readline.createInterface(process.stdin, process.stdout)
-let nick = "Unknown"
 let knownNicks = {}
 
 function console_out(msg) {
@@ -14,12 +21,6 @@ function console_out(msg) {
   rl.prompt(true)
 }
 
-/*rl.question("Please enter a nickname: ", function(name) {
-  nick = name
-  stellarChat.emit({ msgType: 'n', msgContent: nick })
-  rl.prompt(true)
-})*/
-
 rl.on('line', function (line) {
   if (line[0] == "/" && line.length > 1) {
     var cmd = line.match(/[a-z]+\b/)[0]
@@ -28,49 +29,52 @@ rl.on('line', function (line) {
  
   } else {
     // send chat message
-    stellarChat.emit({ msgType: 'c', msgContent: line.slice(0, 27) })
+    chat_command('chat', line)
     rl.prompt(true)
   }
 })
 
 function chat_command(cmd, arg) {
+  let nick
   switch (cmd) {
  
     case 'nick':
       nick = arg
-      stellarChat.emit({ msgType: 'n', msgContent: nick })
+      chatDriver.emit({ type: 'n', content: nick })
       break
  
-    /*case 'msg':
-      var to = arg.match(/[a-zA-Z]+\b/)[0]
-      var message = arg.substr(to.length, arg.length)
-      socket.emit('send', { type: 'tell', message: message, to: to, from: nick })
+    case 'chat':
+      nick = arg.match(/[a-zA-Z]+\b/)[0]
+      const to = knownNicks[nick] ? knownNicks[nick].publicKey : undefined
+
+      if (!to) {
+        console_out(`Unknown receiver: ${nick}`)
+        break
+      }
+
+      const message = arg.substr(2 + nick.length, arg.length)
+      chatDriver.emit({ type: 'c', content: message.slice(0, 27), to })
       rl.prompt(true)
-      break*/
- 
-    /*case 'me':
-      var emote = nick + " " + arg
-      socket.emit('send', { type: 'emote', message: emote })
-      break*/
+      break
  
     default:
       console_out("That is not a valid command.")
   }
 }
 
-stellarChat.onTx(function (tx) {
-  if (tx.memo_type === 'text') {
-    memo = tx.memo
-    if (!memo || memo.length < 2) {
-      return//throw Error(`malformed memo: ${memo}`)
-    }
-    switch (tx.memo[0]) {
-      case 'n':
-        knownNicks[tx.source_account] = memo.slice(1)
-        break
-      case 'c':
-        console_out(`<${knownNicks[tx.source_account] || 'Unknown'}> ${memo.slice(1)}`)
-        break
-    }
+chatDriver.onEvent(function (event) {
+  switch (event.type) {
+    case 'nick':
+      knownNicks[event.content] = {
+        nick: event.content,
+        publicKey: event.source,
+      }
+      console_out(`${event.source} has nick ${event.content}`)
+      break
+    case 'chat':
+      const nickRecord = _.find(Object.values(knownNicks), (elem) => elem.publicKey === event.source)
+
+      console_out(`<${nickRecord ? nickRecord.nick : `Unknown (${event.source.slice(5)}...)`}> ${event.content}`)
+      break
   }
 })
