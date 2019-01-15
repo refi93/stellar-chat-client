@@ -11,49 +11,15 @@ StellarSdk.Network.use(new StellarSdk.Network(process.env.NETWORK_PASSPHRASE))
 const rootAccountKeypair = StellarSdk.Keypair.fromSecret(process.env.STELLAR_ROOT_SECRET)
 
 const checkIfAccountExists = async (publicKey) => {
-  try {
-    await server.loadAccount(publicKey)
-    return true
-  } catch (e) {
-    if (e.response && e.response.status === 404) {
-      return false
-    }
-    throw e
-  }
+  // TODO
 }
 
 const createAccount = async (publicKey, startingBalance) => {
-  const account = await server.loadAccount(rootAccountKeypair.publicKey())
-  const transaction = new StellarSdk.TransactionBuilder(account)
-    .addOperation(StellarSdk.Operation.createAccount({
-      destination: publicKey,
-      startingBalance,
-    })).build()
-
-  transaction.sign(rootAccountKeypair)
-
-  try {
-    await server.submitTransaction(transaction)
-  } catch (e) {
-    throw e
-  }
+  // TODO
 }
 
 const fundAccount = async (publicKey, amount) => {
-  const account = await server.loadAccount(rootAccountKeypair.publicKey())
-  const transaction = new StellarSdk.TransactionBuilder(account)
-    .addOperation(StellarSdk.Operation.payment({
-      destination: publicKey,
-      asset: StellarSdk.Asset.native(),
-      amount,
-    }))
-    .build()
-  transaction.sign(rootAccountKeypair)
-  try {
-    return server.submitTransaction(transaction)
-  } catch (e) {
-    throw e
-  }
+  // TODO
 }
 
 const run = async (publicKey) => {
