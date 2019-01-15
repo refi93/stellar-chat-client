@@ -13,6 +13,7 @@ const StellarChatDriver = (
     if (!content) {
       return
     }
+
     const tx = await buildTx(
       clientSecret,
       to ? to : clientPublic,
@@ -60,8 +61,13 @@ const StellarChatDriver = (
   
   async function buildTx(sourceSecret, destPublic, amount, memo) {
     const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecret)
-    const sourceAccount = await server.loadAccount(sourceKeypair.publicKey())
-  
+    let sourceAccount
+    try {
+      sourceAccount = await server.loadAccount(sourceKeypair.publicKey())
+    } catch (e) {
+      throw new Error('Account not found')
+    }
+    
     const txBuilder = new StellarSdk.TransactionBuilder(sourceAccount)
     txBuilder.addOperation(StellarSdk.Operation.payment({
       destination: destPublic,

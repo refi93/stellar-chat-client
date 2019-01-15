@@ -52,7 +52,7 @@ function chat_command(cmd, arg) {
         break
       }
 
-      const message = arg.substr(2 + nick.length, arg.length)
+      const message = arg.substr(1 + nick.length, arg.length)
       chatDriver.emit({ type: 'c', content: message.slice(0, 27), to })
       rl.prompt(true)
       break
@@ -74,7 +74,7 @@ chatDriver.onEvent(function (event) {
     case 'chat':
       const nickRecord = _.find(Object.values(knownNicks), (elem) => elem.publicKey === event.source)
 
-      console_out(`<${nickRecord ? nickRecord.nick : `Unknown (${event.source.slice(5)}...)`}> ${event.content}`)
+      console_out(`<${nickRecord ? nickRecord.nick : `Unknown (${event.source.slice(0, 5)}...)`}> ${event.content}`)
       break
   }
 })
